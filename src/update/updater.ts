@@ -1,4 +1,4 @@
-import { Capacitor, registerPlugin } from '@capacitor/core'
+import { Capacitor, CapacitorHttp, registerPlugin } from '@capacitor/core'
 import { App as CapApp } from '@capacitor/app'
 import { Directory, Filesystem } from '@capacitor/filesystem'
 
@@ -27,9 +27,17 @@ export interface UpdateInfo extends RemoteVersion {
 /** Prüft auf eine neuere Version. Gibt UpdateInfo zurück, wenn eine bereitsteht, sonst null. */
 export async function checkForUpdate(): Promise<UpdateInfo | null> {
   if (!Capacitor.isNativePlatform()) return null
-  const res = await fetch(UPDATE_MANIFEST_URL, { cache: 'no-store' })
-  if (!res.ok) throw new Error(`Server antwortete mit Status ${res.status}.`)
-  const remote: unknown = await res.json()
+  // Nativer HTTP-Request statt WebView-fetch: GitHubs Release-Asset-Server
+  // (release-assets.githubusercontent.com) sendet keine CORS-Header, ein
+  // fetch() aus der WebView scheitert daher mit "Failed to fetch".
+  const res = await CapacitorHttp.get({
+    url: UPDATE_MANIFEST_URL,
+    headers: { 'Cache-Control': 'no-cache' },
+  })
+  if (res.status < 200 || res.status >= 300) {
+    throw new Error(`Server antwortete mit Status ${res.status}.`)
+  }
+  const remote: unknown = typeof res.data === 'string' ? JSON.parse(res.data) : res.data
   if (!isRemoteVersion(remote)) {
     throw new Error('version.json hat ein ungültiges Format.')
   }
