@@ -1,4 +1,4 @@
-import type { Question, GroupInfo } from '@/types'
+import type { Question, GroupInfo, CatalogInfo } from '@/types'
 
 let cache: Question[] | null = null
 
@@ -31,6 +31,29 @@ export function listGroups(all: readonly Question[]): GroupInfo[] {
     .sort((a, b) => ruleNum(a.name) - ruleNum(b.name))
 }
 
+// Kurzlabels für die (langen) Quell-Bezeichnungen.
+const CATALOG_LABELS: Record<string, string> = {
+  'NFV Übungsfragen für Schiedsrichter-Anwärter ab 2021': 'NFV Schiedsrichter-Anwärter',
+  'BFV Regelkunde-Prüfungsfragen (2022/2023)': 'BFV Regelkunde 2022/23',
+  'BFV Trainerlehrgang Regelfragen (Stand 31.07.2020)': 'BFV Trainerlehrgang 2020',
+  'IFAB Laws of the Game 2024/25': 'IFAB Laws of the Game 2024/25',
+  'Trainerlizenzierung-Prüfungsfragen (Stand 7.06.2024)': 'Trainerlizenzierung 2024',
+  'DFB-Jugendordnung / Landesverbands-Richtlinien': 'DFB-Jugendordnung',
+}
+
+export function catalogLabel(source: string): string {
+  return CATALOG_LABELS[source] ?? source
+}
+
+/** Kataloge (Quellen) mit Anzahl, sortiert nach Häufigkeit. */
+export function listCatalogs(all: readonly Question[]): CatalogInfo[] {
+  const map = new Map<string, number>()
+  for (const q of all) map.set(q.source, (map.get(q.source) ?? 0) + 1)
+  return [...map.entries()]
+    .map(([name, count]) => ({ name, label: catalogLabel(name), count }))
+    .sort((a, b) => b.count - a.count)
+}
+
 /** Schwierigkeitsstufen mit Anzahl, sortiert leicht → mittel → schwer. */
 export function listDifficulties(all: readonly Question[]): GroupInfo[] {
   const order = ['leicht', 'mittel', 'schwer']
@@ -41,13 +64,21 @@ export function listDifficulties(all: readonly Question[]): GroupInfo[] {
     .sort((a, b) => order.indexOf(a.name) - order.indexOf(b.name))
 }
 
-/** Zieht `count` zufällige Fragen, optional auf eine Regel-Gruppe gefiltert. */
+/**
+ * Zieht `count` zufällige Fragen, optional gefiltert nach Regel-Gruppe und/oder
+ * Katalog (Quelle). Der Wert 'all' (oder undefined) bedeutet "kein Filter".
+ */
 export function pickQuestions(
   all: readonly Question[],
   count: number,
-  group: string,
+  group?: string,
+  source?: string,
 ): Question[] {
-  const pool = group === 'all' ? [...all] : all.filter((q) => q.group === group)
+  const pool = all.filter(
+    (q) =>
+      (!group || group === 'all' || q.group === group) &&
+      (!source || source === 'all' || q.source === source),
+  )
   for (let i = pool.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1))
     ;[pool[i], pool[j]] = [pool[j], pool[i]]

@@ -3,8 +3,8 @@ import { Button } from './button'
 import { QuestionCard } from './question-card'
 import { QuizResults } from './quiz-results'
 import { UpdateSection } from './update-section'
-import { listDifficulties, listGroups, pickQuestions } from '@/data/load-questions'
-import type { Answer, Question } from '@/types'
+import { listCatalogs, listDifficulties, listGroups, pickQuestions } from '@/data/load-questions'
+import type { Answer, FilterMode, Question } from '@/types'
 
 type Phase = 'setup' | 'playing' | 'results'
 
@@ -16,24 +16,40 @@ const DIFF_STYLE: Record<string, string> = {
 
 export function QuizClient({ questions: all }: { questions: Question[] }) {
   const [phase, setPhase] = useState<Phase>('setup')
+  const [filterMode, setFilterMode] = useState<FilterMode>('thema')
   const [group, setGroup] = useState('all')
+  const [source, setSource] = useState('all')
   const [count, setCount] = useState(20)
   const [quiz, setQuiz] = useState<Question[]>([])
   const [current, setCurrent] = useState(0)
   const [answers, setAnswers] = useState<Answer[]>([])
 
   const groups = useMemo(() => listGroups(all), [all])
+  const catalogs = useMemo(() => listCatalogs(all), [all])
   const difficulties = useMemo(() => listDifficulties(all), [all])
-  const maxCount = group === 'all' ? all.length : (groups.find((g) => g.name === group)?.count ?? 20)
+
+  const maxCount =
+    filterMode === 'thema'
+      ? group === 'all'
+        ? all.length
+        : (groups.find((g) => g.name === group)?.count ?? all.length)
+      : source === 'all'
+        ? all.length
+        : (catalogs.find((c) => c.name === source)?.count ?? all.length)
 
   const start = useCallback(() => {
-    const picked = pickQuestions(all, count, group)
+    const picked = pickQuestions(
+      all,
+      count,
+      filterMode === 'thema' ? group : 'all',
+      filterMode === 'katalog' ? source : 'all',
+    )
     if (picked.length === 0) return
     setQuiz(picked)
     setCurrent(0)
     setAnswers([])
     setPhase('playing')
-  }, [all, count, group])
+  }, [all, count, filterMode, group, source])
 
   const handleAnswer = useCallback(
     (selectedIndex: number) => {
@@ -72,20 +88,57 @@ export function QuizClient({ questions: all }: { questions: Question[] }) {
 
         <div className="bg-card border border-border rounded-xl p-6 space-y-6">
           <div>
-            <label className="block text-sm font-medium mb-2">Regel-Bereich</label>
-            <select
-              value={group}
-              onChange={(e) => setGroup(e.target.value)}
-              className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
-            >
-              <option value="all">Alle Bereiche ({all.length})</option>
-              {groups.map((g) => (
-                <option key={g.name} value={g.name}>
-                  {g.name} ({g.count})
-                </option>
+            <span className="block text-sm font-medium mb-2">Filtern nach</span>
+            <div className="grid grid-cols-2 gap-1 p-1 bg-muted rounded-lg">
+              {(['thema', 'katalog'] as const).map((m) => (
+                <button
+                  key={m}
+                  onClick={() => setFilterMode(m)}
+                  className={`py-1.5 rounded-md text-sm font-medium transition-colors ${
+                    filterMode === m
+                      ? 'bg-card text-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  {m === 'thema' ? 'Thema' : 'Katalog'}
+                </button>
               ))}
-            </select>
+            </div>
           </div>
+
+          {filterMode === 'thema' ? (
+            <div>
+              <label className="block text-sm font-medium mb-2">Regel-Bereich</label>
+              <select
+                value={group}
+                onChange={(e) => setGroup(e.target.value)}
+                className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
+              >
+                <option value="all">Alle Bereiche ({all.length})</option>
+                {groups.map((g) => (
+                  <option key={g.name} value={g.name}>
+                    {g.name} ({g.count})
+                  </option>
+                ))}
+              </select>
+            </div>
+          ) : (
+            <div>
+              <label className="block text-sm font-medium mb-2">Fragenkatalog (Quelle)</label>
+              <select
+                value={source}
+                onChange={(e) => setSource(e.target.value)}
+                className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
+              >
+                <option value="all">Alle Kataloge ({all.length})</option>
+                {catalogs.map((c) => (
+                  <option key={c.name} value={c.name}>
+                    {c.label} ({c.count})
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           <div>
             <label className="block text-sm font-medium mb-2">
