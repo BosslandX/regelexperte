@@ -1,0 +1,77 @@
+name: Release APK
+
+# Baut bei jedem Tag v* eine signierte Release-APK und veröffentlicht sie
+# samt version.json als GitHub-Release. Der In-App-Updater zieht beides von
+# https://github.com/<owner>/<repo>/releases/latest/download/.
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build web + sync Android
+        run: |
+          npm run build
+          npx cap sync android
+
+      - name: Decode keystore
+        run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > android/regelexperte-release.keystore
+
+      - name: Write keystore.properties
+        run: |
+          cat > android/keystore.properties <<EOF
+          storeFile=../regelexperte-release.keystore
+          storePassword=${{ secrets.KEYSTORE_PASSWORD }}
+          keyAlias=${{ secrets.KEY_ALIAS }}
+          keyPassword=${{ secrets.KEY_PASSWORD }}
+          EOF
+
+      - name: Build signed release APK
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleRelease --no-daemon
+
+      - name: Prepare release assets
+        run: |
+          VERSION_CODE=$(grep -oP 'versionCode \K\d+' android/app/build.gradle)
+          VERSION_NAME=$(grep -oP 'versionName "\K[^"]+' android/app/build.gradle)
+          APK=$(find android/app/build/outputs/apk/release -name '*.apk' | head -1)
+          cp "$APK" regelexperte-release.apk
+          cat > version.json <<EOF
+          {"versionCode":$VERSION_CODE,"versionName":"$VERSION_NAME","url":"https://github.com/${{ github.repository }}/releases/latest/download/regelexperte-release.apk","notes":"Release $VERSION_NAME"}
+          EOF
+          echo "Gebaut: $VERSION_NAME (versionCode $VERSION_CODE)"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            regelexperte-release.apk
+            version.json
+          generate_release_notes: true

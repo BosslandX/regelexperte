@@ -1,0 +1,80 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: 'Geist', sans-serif;
+  --font-mono: 'Geist Mono', monospace;
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+:root {
+  --radius: 0.625rem;
+  --background: #f7faff;
+  --foreground: #0b2545;
+  --card: #ffffff;
+  --card-foreground: #0b2545;
+  --primary: #059669;
+  --primary-foreground: #ffffff;
+  --secondary: #ecfdf5;
+  --secondary-foreground: #065f46;
+  --muted: #eef2f9;
+  --muted-foreground: #4b5e7a;
+  --accent: #d1fae5;
+  --accent-foreground: #065f46;
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: #dbe4f0;
+  --input: #dbe4f0;
+  --ring: #34d399;
+}
+
+.dark {
+  --background: #0b2545;
+  --foreground: #eaf2ff;
+  --card: #13315c;
+  --card-foreground: #eaf2ff;
+  --primary: #34d399;
+  --primary-foreground: #0b2545;
+  --secondary: #134e4a;
+  --secondary-foreground: #eaf2ff;
+  --muted: #13315c;
+  --muted-foreground: #9db4d4;
+  --accent: #134e4a;
+  --accent-foreground: #eaf2ff;
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: #1d416e;
+  --input: #1d416e;
+  --ring: #10b981;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Geist', sans-serif;
+  }
+  code, pre, kbd {
+    font-family: 'Geist Mono', monospace;
+  }
+}

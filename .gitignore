@@ -1,0 +1,32 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Editor / OS
+.DS_Store
+.vscode/
+.idea/
+
+# Android build artifacts
+android/app/build/
+android/build/
+android/.gradle/
+android/captures/
+android/local.properties
+android/app/src/main/assets/public/
+android/app/src/main/assets/capacitor.config.json
+android/app/src/main/assets/capacitor.plugins.json
+
+# Signing – NIEMALS committen
+android/keystore.properties
+*.keystore
+*.jks
+
+# Capacitor
+.capacitor/

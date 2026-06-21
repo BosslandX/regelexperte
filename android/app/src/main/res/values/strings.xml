@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Deutschlands Regelexperte</string>
+    <string name="title_activity_main">Deutschlands Regelexperte</string>
+    <string name="package_name">de.letschew.regelexperte</string>
+    <string name="custom_url_scheme">de.letschew.regelexperte</string>
+</resources>

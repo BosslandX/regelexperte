@@ -1,0 +1,41 @@
+{
+  "name": "regelexperte",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Deutschlands Regelexperte – Schiedsrichter-Regelkunde-Quiz (Capacitor + React)",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -p tsconfig.app.json --noEmit && vite build",
+    "preview": "vite preview",
+    "android:sync": "npm run build && npx cap sync android",
+    "android:open": "npx cap open android",
+    "apk": "npm run build && npx cap sync android && node tools/gradle.mjs assembleDebug",
+    "apk:release": "npm run build && npx cap sync android && node tools/gradle.mjs assembleRelease",
+    "icons": "npx capacitor-assets generate --android"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.1.0",
+    "@capacitor/app": "^8.0.0",
+    "@capacitor/core": "^8.1.0",
+    "@capacitor/filesystem": "^8.0.0",
+    "@capacitor/splash-screen": "^8.0.1",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "tailwind-merge": "^3.5.0"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/cli": "^8.1.0",
+    "@tailwindcss/vite": "^4.0.0",
+    "@types/node": "^20.0.0",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "@vitejs/plugin-react": "^5.0.0",
+    "tailwindcss": "^4.0.0",
+    "typescript": "~5.9.3",
+    "vite": "^7.3.1"
+  }
+}
